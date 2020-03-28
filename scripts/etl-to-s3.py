@@ -3,6 +3,7 @@ import csv
 import json
 import decimal
 import boto3
+from botocore.exceptions import NoCredentialsError
 
 class DecimalEncoder(json.JSONEncoder):
     def default(self, o):
@@ -12,7 +13,7 @@ class DecimalEncoder(json.JSONEncoder):
             return int(o)
         return super(DecimalEncoder, self).default(o)
 
-def etl():
+def extract_and_transform():
     dynamo_db = boto3.resource('dynamodb')
     table = dynamodb.Table('survey-app-dump')
 
@@ -34,11 +35,21 @@ def etl():
     for row in json_data:
         csv_writer.writerow(row.values())
     
+def write_to_s3(csv_filename, bucket_name, target_filename):
+    s3_bucket = boto3.resource('s3')
+    try:
+        s3_bucket.meta.client.upload_file(csv_filename, bucket_name, target_filename) 
+    except NoCredentialsError:
+        print('[ERROR]: Invalid AWS credentials')
+    except FileNotFoundError:
+        pass
+
 
 
 if __name__ == '__main__':
-    etl()
+    extract_and_transform()
     # TODO: Push the CSV file into S3
+    write_to_s3('toS3.csv', 'bucket-name', 'data.csv') # TODO: Configure name of bucket 
     # TODO: Establish context to make this a job
     pass
 
