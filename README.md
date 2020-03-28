@@ -1,4 +1,4 @@
-# api-app
+# Find the Cluster Api-App
 
 Below are the specifications for making a POST call to the API from the clients. 
 
@@ -42,3 +42,20 @@ Response text (WIP):
 ```
 Status code 200
 ```
+
+## Support
+
+Reach out to us at one of the following places!
+
+- Website at <a href="http://findthecluster.com" target="_blank">`findthecluster.com`</a>
+- Twitter at <a href="http://twitter.com/findthecluster" target="_blank">`@findthecluster`</a>
+
+
+---
+
+## License
+
+[![License](http://img.shields.io/:license-mit-blue.svg?style=flat-square)](http://badges.mit-license.org)
+
+- **[MIT license](http://opensource.org/licenses/mit-license.php)**
+- Copyright 2020 © <a href="http://findthecluster.com" target="_blank">FindTheCluster</a>.
