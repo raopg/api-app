@@ -41,9 +41,10 @@ def batch_write_to_csv(json_data):
     csv_writer.writerow(keys)
 
     # Write the data row by row
+    # If the filesize is ~128MB, switch to a new file
     for row in json_data:
         csv_writer.writerow(row.values())
-        if os.path.getsize('data'+ str(file_number)) > 127 * 1024 * 1024
+        if os.path.getsize('data'+ str(file_number) + '.csv') > 127 * 1024 * 1024
             file_number += 1
             csv_file = open('data' + str(file_number) + '.csv', 'w')
             csv_writer = csv.writer(csv_file)
