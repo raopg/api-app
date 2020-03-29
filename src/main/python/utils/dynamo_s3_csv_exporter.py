@@ -3,6 +3,7 @@ import csv
 import json
 import decimal
 import boto3
+import os
 from botocore.exceptions import NoCredentialsError
 
 class DecimalEncoder(json.JSONEncoder):
@@ -17,23 +18,39 @@ def extract_and_transform():
     dynamo_db = boto3.resource('dynamodb')
     table = dynamodb.Table('survey-app-dump')
 
-    items = table.scan()['Items']
+    response = table.scan()
 
-    json_data = []
-
-    for item in items:
-        json_data.append(json.dumps(item, cls=DecimalEncoder))
+    raw_data = response['Items']
     
-    csv_file = open('toS3.csv', 'w') # Open the CSV file to write into
+    while 'LastEvaluatedKey' in response:
+        response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
+        raw_data.extend(response['Items'])
+    
+    json_data = map(lambda item: json.dumps(item, cls=DecimalEncoder))
+
+    return json_data
+
+def batch_write_to_csv(json_data):
+    file_number = 1
+    csv_file = open('data' + str(file_number) + '.csv', 'w') # Open the CSV file to write into
 
     csv_writer = csv.writer(csv_file)
 
     #Write the first line as the header row
-    csv_writer.writerow(json_data[0].keys())
+    keys = json_data[0].keys()
+    csv_writer.writerow(keys)
 
     # Write the data row by row
     for row in json_data:
         csv_writer.writerow(row.values())
+        if os.path.getsize('data'+ str(file_number) > 127 * 1024 * 1024)
+            file_number += 1
+            csv_file = open('data' + str(file_number) + '.csv', 'w')
+            csv_writer = csv.writer(csv_file)
+            csv_writer.writerow(keys)
+    
+    return file_number
+        
     
 def write_to_s3(csv_filename, bucket_name, target_filename):
     s3_bucket = boto3.resource('s3')
@@ -47,9 +64,12 @@ def write_to_s3(csv_filename, bucket_name, target_filename):
 
 
 if __name__ == '__main__':
-    extract_and_transform()
-    # TODO: Push the CSV file into S3
-    write_to_s3('toS3.csv', 'bucket-name', 'data.csv') # TODO: Configure name of bucket 
+    json_data = extract_and_transform()
+    file_number = batch_write_to_csv(json_data)
+    for i in range(1, file_number+1):
+        # TODO: Push the CSV file(s) into S3
+        filename = 'data'+ str(i) + '.csv'
+        write_to_s3(filename, 'bucket-name', filename)# TODO: Configure name of bucket 
     # TODO: Establish context to make this a job
     pass
 
