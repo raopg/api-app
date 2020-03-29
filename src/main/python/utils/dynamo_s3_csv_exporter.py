@@ -26,7 +26,7 @@ def extract_and_transform():
         response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
         raw_data.extend(response['Items'])
     
-    json_data = map(lambda item: json.dumps(item, cls=DecimalEncoder))
+    json_data = map(lambda item: json.dumps(item, cls=DecimalEncoder), raw_data)
 
     return json_data
 
